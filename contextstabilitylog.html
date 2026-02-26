@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Context Stability Log — Applying Your Anchor (US Legal)</title>
+<style>
+  :root{
+    --bg:#0b1020;
+    --muted:#a9b3d1;
+    --text:#eef2ff;
+    --accent:#3FC2C2;
+    --accent2:#63F8EF;
+    --line:rgba(255,255,255,.12);
+    --paper:#ffffff;
+    --ink:#0a1020;
+    --ink2:#1c2440;
+  }
+  body{
+    margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    background:
+      radial-gradient(1200px 600px at 20% 0%, rgba(63,194,194,.18), transparent 60%),
+      radial-gradient(900px 500px at 100% 10%, rgba(99,248,239,.14), transparent 55%),
+      var(--bg);
+    color:var(--text);
+  }
+  .wrap{max-width:980px;margin:0 auto;padding:20px 14px 42px;}
+  .hero{
+    padding:18px 16px;border:1px solid var(--line);border-radius:18px;
+    background:linear-gradient(180deg,rgba(17,26,51,.92),rgba(17,26,51,.72));
+  }
+  h1{margin:0 0 6px;font-size:22px;}
+  .sub{margin:0;color:var(--muted);line-height:1.4;}
+  .pill{
+    display:inline-block;margin-top:10px;
+    padding:6px 10px;border-radius:999px;border:1px solid var(--line);
+    font-size:12px;color:var(--muted);
+  }
+
+  .card{
+    margin-top:14px;border:1px solid var(--line);border-radius:18px;
+    background:rgba(17,26,51,.72);overflow:hidden;
+  }
+  .cardHeader{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:12px 14px;border-bottom:1px solid var(--line);
+  }
+  .cardHeader h2{margin:0;font-size:16px;}
+  .small{font-size:12px;color:var(--muted);line-height:1.35;}
+  .section{padding:14px;}
+  .actions{
+    display:flex;gap:10px;flex-wrap:wrap;
+    padding:12px 14px;border-top:1px solid var(--line);
+    background:rgba(0,0,0,.14);
+    align-items:center;
+  }
+  button{
+    appearance:none;border:0;border-radius:14px;
+    padding:10px 14px;cursor:pointer;font-weight:800;
+    background:linear-gradient(90deg,rgba(63,194,194,.95),rgba(99,248,239,.92));
+    color:#001018;
+  }
+  button.secondary{
+    background:transparent;border:1px solid rgba(255,255,255,.18);
+    color:var(--text);font-weight:700;
+  }
+
+  /* Paper */
+  .paper{
+    background:#fff;color:var(--ink);
+    border-radius:16px;padding:18px;
+    border:1px solid rgba(255,255,255,.10);
+  }
+  .paper h3{margin:0 0 6px;font-size:18px;color:var(--ink);}
+  .paper .lead{margin:0 0 10px;color:var(--ink2);line-height:1.45;font-size:13px;}
+
+  .anchorBar{
+    margin-top:12px;
+    border:1px solid #d8deef;border-radius:12px;background:#f7f9ff;
+    padding:12px 14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;
+  }
+  .anchorLeft{min-width:240px;flex:1;}
+  .anchorLabel{font-weight:900;font-size:13px;margin:0 0 6px;color:var(--ink);}
+  .anchorSelect{
+    width:100%;border:2px solid #0f172a;border-radius:10px;
+    padding:10px;font-size:14px;outline:none;background:#fff;
+  }
+  .anchorNote{color:var(--ink2);font-size:12px;line-height:1.35;max-width:360px;}
+  .anchorValue{
+    margin-top:8px;
+    font-size:13px;
+    color:var(--ink);
+    font-weight:900;
+  }
+  .anchorValue .label{font-weight:900;margin:0;}
+  .anchorValue .chosen{
+    font-weight:1000;
+    padding:6px 10px;
+    border-radius:999px;
+    display:inline-block;
+    border:2px solid rgba(63,194,194,.55);
+    background:rgba(63,194,194,.16);
+  }
+
+  .bullets{
+    margin:12px 0 14px;padding:12px 14px;
+    border:1px solid #d8deef;border-radius:12px;background:#ffffff;
+  }
+  .bullets ul{margin:8px 0 0 18px;color:var(--ink2);}
+
+  .row{display:grid;grid-template-columns:1fr;gap:10px;margin-top:12px;}
+  .field{border:1px solid #d8deef;border-radius:12px;padding:12px;background:#ffffff;}
+  .label{font-weight:900;font-size:13px;margin:0 0 8px;color:var(--ink);}
+
+  .blankArea{
+    width:100%;
+    border:2.5px solid #0f172a;
+    border-radius:10px;
+    background:#fff;
+  }
+  /* default heights (will auto-grow in PNG if free space remains) */
+  .blankArea.xl{min-height:200px;}
+  .blankArea.lg{min-height:170px;}
+
+  .compactGrid{display:grid;grid-template-columns:1fr;gap:10px;margin-top:10px;}
+  .compactField{border:1px solid #d8deef;border-radius:12px;padding:10px 12px;background:#ffffff;}
+  .compactLabel{font-weight:900;font-size:13px;margin:0 0 8px;color:var(--ink);}
+  .ynp{display:flex;gap:16px;flex-wrap:wrap;align-items:center;}
+  .boxOpt{display:flex;align-items:center;gap:10px;font-weight:900;font-size:13px;color:var(--ink);}
+  .box{width:22px;height:22px;border:3px solid #0f172a;border-radius:6px;background:#fff;}
+
+  .calibration{
+    margin-top:14px;padding:12px 14px;
+    border-left:5px solid var(--accent);
+    background:#f6fffe;border-radius:12px;border:1px solid #cfeeee;
+    color:var(--ink2);font-size:13px;line-height:1.45;
+  }
+  .footer{
+    margin-top:14px;padding:12px 14px;border-radius:12px;
+    border:1px solid #d8deef;background:#ffffff;color:var(--ink2);
+    font-size:12px;line-height:1.45;
+  }
+  .footer b{color:var(--ink);}
+
+  .previewWrap{display:none;margin-top:12px;}
+  .previewTitle{margin:0 0 8px;font-size:12px;color:var(--muted);font-weight:800;}
+  .previewImg{width:100%;height:auto;display:block;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.10);}
+
+  @media(min-width:720px){
+    .row{grid-template-columns:1fr 1fr;}
+    .span2{grid-column:span 2;}
+    .compactGrid{grid-template-columns:1fr 1fr;}
+  }
+
+  @media print{
+    body{background:#fff;}
+    .hero,.actions,.previewWrap{display:none !important;}
+    .card{border:none;background:#fff;}
+    .paper{border:none;padding:0;}
+    .wrap{max-width:none;padding:0;}
+  }
+</style>
+</head>
+
+<body>
+<div class="wrap">
+  <div class="hero">
+    <h1>Context Stability Log</h1>
+    <p class="sub">Download and print this guide sheet to practice your Pressure Anchor during one real pressure moment.</p>
+    <div class="pill">US Legal (8.5×14) • PNG export • Print-friendly</div>
+  </div>
+
+  <div class="card">
+    <div class="cardHeader">
+      <h2>Context Stability Log — Applying Your Anchor</h2>
+      <div class="small">Step: choose your Anchor → download the form → fill out at your own pace.</div>
+    </div>
+
+    <div class="section">
+      <div class="paper" id="paper">
+        <h3>Context Stability Log — Applying Your Anchor</h3>
+        <p class="lead">
+          This week, identify <b>one real pressure moment</b> at work. When it appears, apply your <b>Pressure Anchor</b> —
+          then document briefly using this form.
+        </p>
+
+        <div class="anchorBar">
+          <div class="anchorLeft">
+            <div class="anchorLabel">Choose your Anchor (from a previous activity)</div>
+            <select class="anchorSelect" id="anchorSelect">
+              <option value="">Select one…</option>
+              <option>Announce changes early (before they surprise people)</option>
+              <option>Confirm handover outcomes (owner + deadline + next step)</option>
+              <option>Set a clear response time (when you’ll reply or decide)</option>
+              <option>Explain the reason in one sentence (when priorities shift)</option>
+              <option>Restate expectations before reviewing work</option>
+              <option>Clarify authority boundaries when deadlines compress</option>
+            </select>
+
+            <!-- BOLD chosen anchor + proper spacing -->
+            <div class="anchorValue" id="anchorValue" aria-live="polite"></div>
+          </div>
+
+          <div class="anchorNote">
+            <b>How to use this:</b><br>
+            Choose your Anchor above, then click <b>Download Log (PNG)</b> and fill it out at your own pace (printed or handwritten).
+          </div>
+        </div>
+
+        <div class="bullets">
+          <div class="label" style="margin:0;">This week, identify one real pressure moment. It could be:</div>
+          <ul>
+            <li>A compressed deadline</li>
+            <li>A tense conversation</li>
+            <li>A performance correction</li>
+            <li>A change in priorities</li>
+          </ul>
+          <div class="small" style="margin-top:8px;color:var(--ink2);">
+            When that moment appears, apply your Pressure Anchor.
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field span2">
+            <div class="label">1) What was the pressure situation?</div>
+            <div class="blankArea xl"></div>
+          </div>
+
+          <div class="field span2">
+            <div class="label">2) What did I communicate?</div>
+            <div class="blankArea xl"></div>
+          </div>
+        </div>
+
+        <div class="compactGrid">
+          <div class="compactField">
+            <div class="compactLabel">3) Did I apply my anchor behavior?</div>
+            <div class="ynp">
+              <div class="boxOpt"><span class="box"></span> Yes</div>
+              <div class="boxOpt"><span class="box"></span> Partly</div>
+              <div class="boxOpt"><span class="box"></span> No</div>
+            </div>
+          </div>
+
+          <div class="compactField">
+            <div class="compactLabel">4) Did standards remain consistent?</div>
+            <div class="ynp">
+              <div class="boxOpt"><span class="box"></span> Yes</div>
+              <div class="boxOpt"><span class="box"></span> Partly</div>
+              <div class="boxOpt"><span class="box"></span> No</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field span2">
+            <div class="label">5) What would I adjust next time?</div>
+            <div class="blankArea xl"></div>
+          </div>
+
+          <div class="field span2">
+            <div class="label">Notes (optional)</div>
+            <div class="blankArea lg"></div>
+          </div>
+        </div>
+
+        <div class="calibration">
+          <b>This is not evaluation.</b> It is calibration.<br><br>
+          Your Trust Snapshot measured how predictable you are <i>perceived</i> to be.<br>
+          This log measures whether your <i>behavior</i> aligns with that perception.
+        </div>
+
+        <div class="footer">
+          <b>Supporting research:</b> Habit formation research suggests that repeating a small behavior in a consistent context increases the chance it becomes automatic over time.<br>
+          <span class="small" style="color:var(--ink2);">
+            Reference: Lally, P., van Jaarsveld, C. H. M., Potts, H. W. W., & Wardle, J. (2009).
+            <i>How are habits formed: Modelling habit formation in the real world.</i> European Journal of Social Psychology, 40(6), 998–1009.
+          </span>
+        </div>
+      </div>
+
+      <div class="previewWrap" id="previewWrap">
+        <p class="previewTitle">Preview (if download is blocked on mobile, long-press the image to Save/Share)</p>
+        <img class="previewImg" id="previewImg" alt="Context Stability Log preview image">
+      </div>
+
+      <!-- US LEGAL canvas (8.5 x 14) @150dpi -->
+      <canvas id="canvas" width="1275" height="2100" style="display:none;" aria-hidden="true"></canvas>
+    </div>
+
+    <div class="actions">
+      <button id="btnPng" type="button">Download Log (PNG) — Legal</button>
+      <button class="secondary" id="btnPrint" type="button">Print</button>
+      <button class="secondary" id="btnReset" type="button">Reset Anchor</button>
+      <div class="small" style="margin-left:auto;max-width:420px;">
+        Tip: If the page has extra blank area, the Legal PNG auto-stretches writing boxes to use it.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function $(id){ return document.getElementById(id); }
+function escapeHtml(s){
+  return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+}
+function getAnchorFromUrl(){
+  const p = new URLSearchParams(location.search);
+  const a = p.get("anchor");
+  return a ? decodeURIComponent(a) : "";
+}
+function setAnchorValue(text){
+  const out = $("anchorValue");
+  if(text){
+    out.innerHTML = `<span class="label" style="display:inline;">Chosen Anchor:</span> <span class="chosen">${escapeHtml(text)}</span>`;
+  } else {
+    out.innerHTML = "";
+  }
+}
+
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+function wrapLines(ctx, text, maxWidth){
+  const words = String(text || "").split(/\s+/).filter(Boolean);
+  const lines = [];
+  let line = "";
+  for (let i=0;i<words.length;i++){
+    const test = line ? line + " " + words[i] : words[i];
+    if (ctx.measureText(test).width > maxWidth && line){
+      lines.push(line);
+      line = words[i];
+    } else line = test;
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+function drawBox(ctx, x, y, w, h, r=14){
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = "rgba(10,16,32,.35)";
+  roundRect(ctx, x, y, w, h, r);
+  ctx.stroke();
+}
+function drawCheckbox(ctx, x, y){
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = "#0f172a";
+  roundRect(ctx, x, y, 26, 26, 6);
+  ctx.stroke();
+}
+
+function generatePNG(){
+  const canvas = $("canvas");
+  const ctx = canvas.getContext("2d");
+  const W = canvas.width, H = canvas.height;
+
+  const anchor = $("anchorSelect").value || getAnchorFromUrl() || "";
+
+  // Background
+  ctx.fillStyle = "#0b1020";
+  ctx.fillRect(0,0,W,H);
+
+  // Accents
+  ctx.fillStyle = "rgba(63,194,194,.12)";
+  ctx.beginPath(); ctx.ellipse(260, 260, 420, 280, 0, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = "rgba(99,248,239,.10)";
+  ctx.beginPath(); ctx.ellipse(W-260, 360, 560, 360, 0, 0, Math.PI*2); ctx.fill();
+
+  // Paper with SAFE margins
+  const pad = 70;
+  const safeBottom = 120;
+  const cardH = H - pad - safeBottom;
+
+  ctx.fillStyle = "#ffffff";
+  roundRect(ctx, pad, pad, W-pad*2, cardH, 28);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(10,16,32,.12)";
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  const x0 = pad + 54;
+  const innerW = W - (pad*2) - 108;
+  let y = pad + 84;
+
+  // Title
+  ctx.fillStyle = "#0a1020";
+  ctx.font = "900 38px Arial";
+  ctx.fillText("Context Stability Log — Applying Your Anchor", x0, y);
+
+  y += 36;
+  ctx.fillStyle = "#1c2440";
+  ctx.font = "600 19px Arial";
+  ctx.fillText("Choose your Anchor, then print and fill out at your own pace.", x0, y);
+
+  // Chosen anchor line (BOLD + wrapped cleanly)
+  y += 46;
+  ctx.fillStyle = "#0a1020";
+  ctx.font = "900 21px Arial";
+  ctx.fillText("Chosen Anchor:", x0, y);
+
+  const anchorX = x0 + 175;
+  const anchorMaxW = innerW - 175;
+  const anchorText = anchor ? anchor : "______________________________";
+
+  ctx.font = "900 21px Arial";
+  const anchorLines = wrapLines(ctx, anchorText, anchorMaxW);
+
+  // draw a subtle pill behind the first line when anchor exists
+  if(anchor){
+    const lineText = anchorLines[0];
+    const tw = ctx.measureText(lineText).width;
+    ctx.fillStyle = "rgba(63,194,194,.16)";
+    ctx.strokeStyle = "rgba(63,194,194,.55)";
+    ctx.lineWidth = 2;
+    roundRect(ctx, anchorX - 10, y - 24, tw + 20, 34, 16);
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  ctx.fillStyle = "#0a1020";
+  anchorLines.slice(0,2).forEach((ln, i) => {
+    ctx.font = "900 21px Arial";
+    ctx.fillText(ln, anchorX, y + (i*26));
+  });
+
+  // Divider (after anchor block)
+  y += (anchorLines.length > 1 ? 42 : 18);
+  ctx.strokeStyle = "rgba(10,16,32,.18)";
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x0 + innerW, y); ctx.stroke();
+
+  // Bullets
+  y += 28;
+  ctx.fillStyle = "#0a1020";
+  ctx.font = "900 21px Arial";
+  ctx.fillText("This week, identify one real pressure moment. It could be:", x0, y);
+
+  y += 14;
+  ctx.fillStyle = "#1c2440";
+  ctx.font = "650 19px Arial";
+  ["• A compressed deadline","• A tense conversation","• A performance correction","• A change in priorities"]
+    .forEach((b,i)=>ctx.fillText(b,x0,y+28+i*26));
+
+  y += 150;
+
+  const maxY = pad + cardH - 30;
+
+  // We will AUTO-FILL remaining vertical space into writing boxes:
+  // - Keep checkboxes + calibration + footer fixed
+  // - Distribute leftover height into Q1, Q2, Q5, Notes
+  const fixedForBottom = 72 + 72 + 22 + 22 + 120 + 60 + 26 + 30; // rough safety
+  // We'll compute more precisely based on layout below.
+
+  // Minimum heights
+  let qMin = 165;      // Q1/Q2/Q5
+  let notesMin = 135;  // Notes
+  let calH = 120;
+
+  // Layout constants
+  const gapAfterQ = 20;
+  const labelGap = 14;
+
+  // Reserve: Q3/Q4 block height area
+  const ynBlockHeight = 78 + 22; // box + spacing
+  const ynTitleBlock = 16; // title area accounted per block, but we draw both on same row
+
+  // Reserve footer space at bottom
+  const footerH = 46; // 2 lines text
+
+  // Minimum total needed from current y:
+  const minNeeded =
+    (labelGap + qMin + gapAfterQ) +   // Q1
+    (labelGap + qMin + gapAfterQ) +   // Q2
+    (ynTitleBlock + ynBlockHeight) +  // Q3/Q4 row
+    (labelGap + qMin + gapAfterQ) +   // Q5
+    (labelGap + notesMin + gapAfterQ) + // Notes
+    (calH + 26) +
+    footerH;
+
+  const remaining = maxY - y;
+  let extra = remaining - minNeeded;
+
+  // Distribute extra space into writing areas (Q1/Q2/Q5/Notes)
+  // Weight: Q1 1.2, Q2 1.2, Q5 1.4, Notes 1.0
+  let q1H = qMin, q2H = qMin, q5H = qMin, notesH = notesMin;
+
+  if (extra > 0){
+    const w1 = 1.2, w2 = 1.2, w5 = 1.4, wn = 1.0;
+    const sumW = w1+w2+w5+wn;
+    q1H += Math.floor(extra * (w1/sumW));
+    q2H += Math.floor(extra * (w2/sumW));
+    q5H += Math.floor(extra * (w5/sumW));
+    notesH += Math.floor(extra * (wn/sumW));
+  } else {
+    // If tight, slightly shrink calibration to ensure no clipping
+    if (remaining < minNeeded) calH = 105;
+  }
+
+  function drawQ(title, height){
+    ctx.fillStyle = "#0a1020";
+    ctx.font = "900 21px Arial";
+    ctx.fillText(title, x0, y);
+    y += labelGap;
+    drawBox(ctx, x0, y, innerW, height, 16);
+    y += height + gapAfterQ;
+  }
+
+  drawQ("1) What was the pressure situation?", q1H);
+  drawQ("2) What did I communicate?", q2H);
+
+  // Q3 + Q4 side-by-side compact
+  function drawYN(title, leftX, topY){
+    ctx.fillStyle = "#0a1020";
+    ctx.font = "900 20px Arial";
+    ctx.fillText(title, leftX, topY);
+
+    const boxY = topY + 12;
+    const boxW = (innerW - 20) / 2;
+    drawBox(ctx, leftX, boxY, boxW, 72, 16);
+
+    const startX = leftX + 16;
+    const startY = boxY + 22;
+    const gap = 150;
+    ["Yes","Partly","No"].forEach((o,i)=>{
+      const bx = startX + i*gap;
+      drawCheckbox(ctx, bx, startY);
+      ctx.fillStyle = "#0a1020";
+      ctx.font = "900 18px Arial";
+      ctx.fillText(o, bx + 38, startY + 20);
+    });
+
+    return boxY + 72 + 22;
+  }
+
+  const halfW = (innerW - 20) / 2;
+  const startY = y;
+  const yAfterLeft = drawYN("3) Did I apply my anchor behavior?", x0, startY);
+  const yAfterRight = drawYN("4) Did standards remain consistent?", x0 + halfW + 20, startY);
+  y = Math.max(yAfterLeft, yAfterRight);
+
+  drawQ("5) What would I adjust next time?", q5H);
+  drawQ("Notes (optional)", notesH);
+
+  // Calibration
+  // Ensure it fits
+  if (y + calH + footerH + 10 > maxY){
+    calH = Math.max(90, maxY - y - footerH - 10);
+  }
+
+  ctx.fillStyle = "rgba(63,194,194,.10)";
+  roundRect(ctx, x0, y, innerW, calH, 16);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(63,194,194,.35)";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.fillStyle = "#0a1020";
+  ctx.font = "900 21px Arial";
+  ctx.fillText("This is not evaluation. It is calibration.", x0+16, y+38);
+
+  ctx.fillStyle = "#1c2440";
+  ctx.font = "600 18px Arial";
+  const calText =
+    "Your Trust Snapshot measured how predictable you are perceived to be. " +
+    "This log measures whether your behavior aligns with that perception.";
+  const calLines = wrapLines(ctx, calText, innerW - 32);
+  let cy = y + 68;
+  calLines.slice(0,2).forEach(ln => { ctx.fillText(ln, x0+16, cy); cy += 24; });
+
+  y += calH + 26;
+
+  // Footer (kept within card)
+  const footerY = Math.min(y, maxY - footerH);
+  ctx.fillStyle = "#1c2440";
+  ctx.font = "600 15px Arial";
+  ctx.fillText("Research suggests repetition in a consistent context supports habit formation over time.", x0, footerY);
+  ctx.font = "600 13px Arial";
+  ctx.fillText("Reference: Lally et al. (2009), European Journal of Social Psychology, 40(6), 998–1009.", x0, footerY + 20);
+
+  const url = canvas.toDataURL("image/png");
+  $("previewImg").src = url;
+  $("previewWrap").style.display = "block";
+  return url;
+}
+
+function downloadPNG(){
+  const url = generatePNG();
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "context-stability-log-LEGAL.png";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const fromUrl = getAnchorFromUrl();
+  if(fromUrl){
+    const opts = [...$("anchorSelect").options].map(o => o.value);
+    if(opts.includes(fromUrl)) $("anchorSelect").value = fromUrl;
+    setAnchorValue(fromUrl);
+  }
+
+  $("anchorSelect").addEventListener("change", () => setAnchorValue($("anchorSelect").value));
+
+  // Also update the bold anchor pill immediately if dropdown preselected
+  if ($("anchorSelect").value) setAnchorValue($("anchorSelect").value);
+
+  $("btnPng").addEventListener("click", downloadPNG);
+  $("btnPrint").addEventListener("click", () => window.print());
+  $("btnReset").addEventListener("click", () => {
+    $("anchorSelect").value = "";
+    setAnchorValue("");
+    $("previewWrap").style.display = "none";
+    $("previewImg").src = "";
+  });
+});
+</script>
+</body>
+</html>
