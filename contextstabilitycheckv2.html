@@ -1,0 +1,1128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Context Stability Check</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --text:#eef2ff;
+      --muted:#a9b3d1;
+      --line: rgba(255,255,255,.12);
+      --accent:#3FC2C2;
+      --accent2:#63F8EF;
+
+      --strong:#7ee787;
+      --fragile:#ffcc66;
+      --risk:#ff9f66;
+      --erosion:#ff6b6b;
+    }
+    *{box-sizing:border-box;}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:
+        radial-gradient(900px 520px at 10% 0%, rgba(63,194,194,.16), transparent 60%),
+        radial-gradient(820px 520px at 100% 10%, rgba(99,248,239,.12), transparent 55%),
+        var(--bg);
+      color: var(--text);
+    }
+    .wrap{max-width: 980px; margin:0 auto; padding: 16px 14px 18px;}
+
+    .hero{
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:14px;
+      background: linear-gradient(180deg, rgba(17,26,51,.92), rgba(17,26,51,.72));
+    }
+    h1{margin:0 0 8px; font-size:18px;}
+    .sub{margin:0; color:var(--muted); line-height:1.45; font-size:13px;}
+    .pill{
+      display:inline-block; margin-top:10px;
+      padding:6px 10px; border-radius:999px;
+      border:1px solid var(--line);
+      color:var(--muted); font-size:12px;
+    }
+    .hl{
+      display:inline-block;
+      padding:2px 8px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(0,0,0,.18);
+      font-weight:850;
+      letter-spacing:.2px;
+      margin-right:8px;
+    }
+    .hl.before{border-color: rgba(63,194,194,.5); color: rgba(99,248,239,.95);}
+    .hl.important{border-color: rgba(255,204,102,.55); color: rgba(255,204,102,.98);}
+
+    .card{
+      margin-top: 12px;
+      border:1px solid var(--line);
+      border-radius:18px;
+      background: rgba(17,26,51,.72);
+      overflow: visible; /* IMPORTANT: do not trap sticky/button clicks */
+    }
+    .cardHeader{
+      display:flex; gap:12px;
+      align-items:flex-start; justify-content:space-between;
+      padding:12px 14px;
+      border-bottom:1px solid var(--line);
+      border-top-left-radius:18px;
+      border-top-right-radius:18px;
+      background: rgba(17,26,51,.86);
+    }
+    .cardHeader h2{margin:0; font-size:15px;}
+    .small{color:var(--muted); font-size:12px; line-height:1.35;}
+
+    .section{
+      padding: 12px 14px 92px; /* IMPORTANT: space for sticky action bar */
+    }
+
+    .screen{display:none;}
+    .screen.active{display:block;}
+
+    .row{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:10px;
+    }
+    @media (min-width: 820px){
+      .row{grid-template-columns: 1fr 1fr;}
+    }
+
+    .box{
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:14px;
+      padding:12px;
+      background: rgba(0,0,0,.10);
+    }
+    .box h3{margin:0 0 8px; font-size:14px;}
+    .box p{margin:0; color:var(--muted); line-height:1.45;}
+
+    .divider{height:1px; background: var(--line); margin: 10px 0;}
+    .err{color: var(--erosion); font-size:13px; margin: 6px 0 0;}
+
+    label{display:block; font-size:12px; color:var(--muted); margin-bottom:6px;}
+    input[type="number"], input[type="text"], textarea{
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(0,0,0,.18);
+      color: var(--text);
+      padding: 10px 10px;
+      outline: none;
+      font-size: 14px;
+    }
+    textarea{min-height: 92px; resize: vertical;}
+
+    /* Anchor picker */
+    .anchorList{display:grid; gap:10px; margin-top:10px;}
+    .aOpt{
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:14px;
+      background: rgba(0,0,0,.10);
+      padding:12px;
+      cursor:pointer;
+      transition: transform .08s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease;
+    }
+    .aOpt:hover{
+      transform: translateY(-1px);
+      border-color: rgba(63,194,194,.55);
+      box-shadow: 0 8px 18px rgba(0,0,0,.22);
+    }
+    .aTop{display:flex; gap:10px; align-items:flex-start;}
+    .aTitle{font-weight:900; font-size:13px; margin:0;}
+    .aDesc{margin:4px 0 0; font-size:12px; color: var(--muted); line-height:1.35;}
+    .aRadio{margin-top:2px;}
+    .aOpt.active{
+      border-color: rgba(63,194,194,.95);
+      background: rgba(63,194,194,.12);
+      box-shadow: 0 10px 22px rgba(63,194,194,.12);
+    }
+    .otherWrap{margin-top:8px; display:none;}
+    .otherWrap.show{display:block;}
+
+    .selectedAnchorBox{
+      margin-top: 10px;
+      border: 1px dashed rgba(255,255,255,.18);
+      background: rgba(0,0,0,.12);
+      border-radius: 14px;
+      padding: 10px 12px;
+    }
+    .selectedAnchorBox b{color: var(--text);}
+    .selectedAnchorText{color: var(--muted); font-size: 12px; line-height: 1.35; margin-top: 6px;}
+
+    /* Questions */
+    .qArea{
+      max-height: 440px;
+      overflow:auto;
+      padding-right: 6px;
+    }
+    .qArea::-webkit-scrollbar{width:8px;}
+    .qArea::-webkit-scrollbar-thumb{background: rgba(255,255,255,.14); border-radius:999px;}
+
+    .q{
+      padding:12px;
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:14px;
+      margin-bottom:10px;
+      background: rgba(0,0,0,.10);
+    }
+    .qTitle{margin:0 0 10px; font-size:13px; line-height:1.35;}
+
+    .scale{
+      display:grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap:8px;
+    }
+    @media (max-width: 520px){
+      .scale{grid-template-columns: repeat(2, minmax(0, 1fr));}
+    }
+    .opt{
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:12px;
+      padding:10px 8px;
+      text-align:center;
+      cursor:pointer;
+      user-select:none;
+      transition: transform .08s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease;
+      font-size:12px;
+      color:var(--muted);
+      min-height:44px;
+      display:flex; align-items:center; justify-content:center;
+      background: rgba(0,0,0,.08);
+    }
+    .opt:hover{
+      transform: translateY(-1px);
+      border-color: rgba(63,194,194,.55);
+      box-shadow: 0 8px 18px rgba(0,0,0,.22);
+    }
+    input[type="radio"]{display:none;}
+    input[type="radio"]:checked + .opt{
+      border-color: rgba(63,194,194,.95);
+      background: rgba(63,194,194,.18);
+      color: var(--text);
+      box-shadow: 0 10px 22px rgba(63,194,194,.14);
+      transform: translateY(-1px);
+    }
+
+    /* Results */
+    .kpi{display:flex; gap:12px; flex-wrap:wrap;}
+    .kpiCard{
+      flex:1;
+      min-width: 220px;
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:14px;
+      padding:12px;
+      background: rgba(0,0,0,.12);
+    }
+    .kpiTitle{font-size:12px; color:var(--muted); font-weight:750;}
+    .kpiVal{margin-top:6px; font-size:22px; font-weight:950;}
+
+    .tag{
+      display:inline-flex; align-items:center; gap:8px;
+      font-size:12px;
+      padding:5px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.16);
+      margin-top:10px;
+      font-weight:850;
+      background: rgba(0,0,0,.10);
+      white-space:nowrap;
+    }
+    .tag.strong{border-color: rgba(126,231,135,.7); color: rgba(126,231,135,.98);}
+    .tag.fragile{border-color: rgba(255,204,102,.8); color: rgba(255,204,102,.98);}
+    .tag.risk{border-color: rgba(255,159,102,.75); color: rgba(255,159,102,.98);}
+    .tag.erosion{border-color: rgba(255,107,107,.8); color: rgba(255,107,107,.98);}
+
+    /* Preview */
+    .previewWrap{margin-top:10px; display:none;}
+    .previewTitle{margin:0 0 8px; font-size:12px; color:var(--muted); font-weight:750;}
+    .previewImg{
+      width:100%;
+      height:auto;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.10);
+      display:block;
+    }
+
+    /* ACTION BAR (sticky at bottom of wrap, not inside scroll traps) */
+    .actionsSticky{
+      position: sticky;
+      bottom: 0;
+      z-index: 9999;
+      margin-top: 12px;
+      border:1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(11,16,32,.92);
+      backdrop-filter: blur(6px);
+      padding: 10px 12px;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .actionsLeft{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+
+    button{
+      appearance:none; border:0; border-radius:14px;
+      padding:10px 14px; cursor:pointer; font-weight:750;
+      background: linear-gradient(90deg, rgba(63,194,194,.95), rgba(99,248,239,.92));
+      color:#001018;
+    }
+    button.secondary{
+      background: transparent;
+      border:1px solid rgba(255,255,255,.18);
+      color: var(--text);
+      font-weight:650;
+    }
+    button:disabled{opacity:.55; cursor:not-allowed;}
+  </style>
+</head>
+
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <h1>Context Stability Check</h1>
+    <p class="sub"><span class="hl before">Before you start</span>This is a calibration check.</p>
+    <p class="sub">Answer based on your <b>recent practice</b> — especially during moments of pressure.</p>
+    <div class="divider"></div>
+    <p class="sub"><span class="hl important">Important</span>This is not a clinical test, psychology assessment, personality test, or performance evaluation.</p>
+    <p class="sub">We are checking one thing: <b>behavioral consistency under pressure</b>.</p>
+    <div class="pill">Includes your Anchor reminder • Downloadable PNG preview</div>
+  </div>
+
+  <div class="card" id="mainCard">
+    <div class="cardHeader">
+      <div>
+        <h2 id="screenTitle">Step 1 — Bring Forward Your Previous Result</h2>
+        <div class="small" id="screenSub">Keep your previous score visible. This is a reference point, not a judgment.</div>
+      </div>
+      <div class="small">Scale: Did not practice → Practiced consistently under pressure</div>
+    </div>
+
+    <div class="section">
+      <!-- SCREEN 1 -->
+      <div class="screen active" id="s1">
+        <div class="row">
+          <div class="box">
+            <h3>Your Previous Context Score based on Trust diagnostic</h3>
+            <p>Lat time, your Context score reflected your behavior over the past months.</p>
+            <div class="divider"></div>
+            <p class="small">
+              Now we check your recent practice over the last couple of weeks. The goal is calibration: what you intentionally practiced, especially under pressure.
+            </p>
+            <div class="divider"></div>
+
+            <label for="prevPct">Enter your previous Context %</label>
+            <input id="prevPct" type="number" min="0" max="100" placeholder="e.g., 73" />
+            <div class="small" style="margin-top:6px;">
+              Make sure you save the result of the Trust Diagnostic so you can get the exact result.
+              Do not guess. Enter the exact percentage.
+            </div>
+
+            <div class="divider"></div>
+
+            <h3>Reminder: Your chosen Anchor Behavior</h3>
+            <p class="small">Choose the anchor you selected in the previous activity. Keep it as one clear sentence.</p>
+
+            <div class="anchorList" id="anchorList"></div>
+
+            <div class="otherWrap" id="otherWrap">
+              <label for="otherAnchor">Other (write your own) — one sentence</label>
+              <input id="otherAnchor" type="text" placeholder="Example: Restate priorities in one sentence before moving forward." />
+            </div>
+
+            <!-- NEW: always show what was selected -->
+            <div class="selectedAnchorBox" id="selectedAnchorBox" style="display:none;">
+              <b>Selected Anchor:</b>
+              <div class="selectedAnchorText" id="selectedAnchorText"></div>
+            </div>
+
+            <div id="err1" class="err" aria-live="polite"></div>
+          </div>
+
+          <div class="box">
+            <h3>What this check does</h3>
+            <p>
+              The Trust Snapshot shows a baseline across months.
+              This check focuses on your recent practice — especially under pressure.
+            </p>
+            <div class="divider"></div>
+            <p class="small">Output: Stability score + comparison + a clear next step + downloadable PNG.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCREEN 2 -->
+      <div class="screen" id="s2">
+        <div class="box">
+          <h3>Step 2 — Context Stability Check (Recent Practice)</h3>
+          <p class="small">Answer based on your recent practice — focus on what you intentionally practiced, especially under pressure.</p>
+          <div class="divider"></div>
+
+          <div class="box" style="margin-bottom:10px; background: rgba(0,0,0,.16);">
+            <p class="small" style="margin:0;">
+              <b>Important:</b> If the situation didn’t happen, answer based on whether you intentionally practiced the behavior when you had the chance (or created a moment to practice it).
+            </p>
+          </div>
+
+          <div class="qArea" id="questions"></div>
+          <div id="err2" class="err" aria-live="polite"></div>
+        </div>
+      </div>
+
+      <!-- SCREEN 3 -->
+      <div class="screen" id="s3">
+        <div class="box">
+          <h3>Step 3 — Results & Calibration</h3>
+          <p class="small">Use the comparison to choose the next step. This is calibration, not judgment.</p>
+          <div class="divider"></div>
+          <div class="kpi" id="kpis"></div>
+
+          <div class="divider"></div>
+          <div class="box" style="background: rgba(0,0,0,.12);" id="interpretationBox"></div>
+
+          <div class="divider"></div>
+
+          <div class="box">
+            <h3>Anchor Reinforcement</h3>
+            <p class="small">This should match your chosen anchor. Keep it one sentence.</p>
+            <div class="divider"></div>
+
+            <label for="anchorText">When pressure rises, I will consistently…</label>
+            <textarea id="anchorText" placeholder="Your chosen anchor will appear here."></textarea>
+
+            <div class="divider"></div>
+
+            <label for="anchorCheck">Quick check (1–2 lines): Did I apply it intentionally, or did pressure override it?</label>
+            <textarea id="anchorCheck" placeholder="Write a short reflection."></textarea>
+          </div>
+
+          <div class="divider"></div>
+          <div class="box" id="exitPath"></div>
+
+          <div class="divider"></div>
+
+          <div class="box">
+            <h3>Downloadable Preview</h3>
+            <p class="small">A preview image appears after calculation. You can download it as PNG.</p>
+
+            <div class="previewWrap" id="previewWrap">
+              <p class="previewTitle">Preview (mobile: long-press to Save/Share if download is blocked)</p>
+              <img class="previewImg" id="previewImg" alt="Context Stability preview image" />
+            </div>
+
+            <canvas id="resultsCanvas" width="1240" height="1754" style="display:none;" aria-hidden="true"></canvas>
+
+            <div class="actionsLeft" style="margin-top:10px;">
+              <button class="secondary" id="btnPng" type="button" disabled>Download Preview (PNG)</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ACTION BAR OUTSIDE CARD (fixes aNewSpring click issues) -->
+  <div class="actionsSticky" id="actionsSticky">
+    <div class="actionsLeft">
+      <button class="secondary" id="btnBack" type="button">Back</button>
+      <button class="secondary" id="btnReset" type="button">Reset</button>
+    </div>
+    <div class="actionsLeft">
+      <button id="btnNext" type="button">Next</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  /* -----------------------------
+    Scale + Items
+  ------------------------------ */
+  const SCALE = [
+    "I did not practice this",
+    "I tried it once",
+    "I practiced it sometimes",
+    "I practiced it often",
+    "I practiced it consistently under pressure"
+  ];
+  const VALUES = [1,2,3,4,5];
+
+  const ITEMS = [
+    { id:"q1", text:"I clearly restated priorities before moving work forward." },
+    { id:"q2", text:"When something changed, I explained what changed and why." },
+    { id:"q3", text:"I applied the same standards across situations, even when time was tight." },
+    { id:"q4", text:"I clarified who could decide what before or during task execution." },
+    { id:"q5", text:"I avoided moving forward without re-confirming expectations." },
+    { id:"q6", text:"In pressure moments, I intentionally practiced my Pressure Anchor." }
+  ];
+
+  const BANDS = [
+    { min:85, tag:"Strong", css:"strong" },
+    { min:70, tag:"Stable but Fragile", css:"fragile" },
+    { min:55, tag:"At Risk", css:"risk" },
+    { min:0,  tag:"Active Erosion", css:"erosion" }
+  ];
+  const band = (p)=> BANDS.find(b=>p>=b.min);
+  const pct  = (n,d)=> Math.round((n/d)*100);
+
+  /* -----------------------------
+    Anchor Choices
+  ------------------------------ */
+  const ANCHORS = [
+    {
+      key:"decisionReason",
+      title:"Explain decision reasoning in one sentence",
+      desc:"Keeps people oriented, reduces assumptions.",
+      sentence:"Explain decision reasoning in one sentence."
+    },
+    {
+      key:"restateExpectations",
+      title:"Restate expectations before reviewing work",
+      desc:"Prevents defensiveness, keeps feedback fair.",
+      sentence:"Restate expectations before reviewing work."
+    },
+    {
+      key:"authorityBoundaries",
+      title:"Clarify authority boundaries when deadlines compress",
+      desc:"Avoids confusion and “silent takeovers.”",
+      sentence:"Clarify authority boundaries when deadlines compress."
+    },
+    {
+      key:"other",
+      title:"Other (write your own)",
+      desc:"Keep it simple. One sentence.",
+      sentence:""
+    }
+  ];
+
+  let selectedAnchorKey = null;
+
+  function renderAnchors(){
+    const list = document.getElementById("anchorList");
+    list.innerHTML = "";
+
+    ANCHORS.forEach(a=>{
+      const div = document.createElement("div");
+      div.className = "aOpt";
+      div.dataset.key = a.key;
+      div.innerHTML = `
+        <div class="aTop">
+          <input class="aRadio" type="radio" name="anchorPick" value="${a.key}" />
+          <div>
+            <p class="aTitle">${a.title}</p>
+            <p class="aDesc">${a.desc}</p>
+          </div>
+        </div>
+      `;
+      div.addEventListener("click", ()=> selectAnchor(a.key));
+      list.appendChild(div);
+    });
+  }
+
+  function getChosenAnchorSentence(){
+    const otherText = (document.getElementById("otherAnchor").value || "").trim();
+    const found = ANCHORS.find(a=>a.key===selectedAnchorKey);
+    if (!found) return "";
+    if (selectedAnchorKey==="other") return otherText || "";
+    return found.sentence || "";
+  }
+
+  function showSelectedAnchor(){
+    const box = document.getElementById("selectedAnchorBox");
+    const txt = document.getElementById("selectedAnchorText");
+    const sentence = getChosenAnchorSentence();
+    if (sentence){
+      box.style.display = "block";
+      txt.textContent = sentence;
+    } else {
+      box.style.display = "none";
+      txt.textContent = "";
+    }
+  }
+
+  function syncAnchorToTextarea(){
+    const t = document.getElementById("anchorText");
+    if (!t) return;
+    const sentence = getChosenAnchorSentence();
+    if (!sentence) return;
+
+    const cur = (t.value || "").trim();
+    if (!cur || cur === t.dataset.autofill){
+      t.value = sentence;
+      t.dataset.autofill = sentence;
+    }
+  }
+
+  function selectAnchor(key){
+    selectedAnchorKey = key;
+
+    document.querySelectorAll(".aOpt").forEach(el=>{
+      el.classList.toggle("active", el.dataset.key===key);
+      const r = el.querySelector('input[type="radio"]');
+      if (r) r.checked = (el.dataset.key===key);
+    });
+
+    document.getElementById("otherWrap").classList.toggle("show", key==="other");
+
+    showSelectedAnchor();
+    syncAnchorToTextarea();
+  }
+
+  document.addEventListener("input", (e)=>{
+    if (e.target && e.target.id === "otherAnchor"){
+      if (selectedAnchorKey==="other"){
+        showSelectedAnchor();
+        syncAnchorToTextarea();
+      }
+    }
+  });
+
+  /* -----------------------------
+    Screens
+  ------------------------------ */
+  let screen = 1;
+  const screens = ["s1","s2","s3"];
+
+  function setScreen(n){
+    screen = n;
+    screens.forEach((id, idx)=>{
+      document.getElementById(id).classList.toggle("active", (idx+1)===n);
+    });
+
+    const title = document.getElementById("screenTitle");
+    const sub   = document.getElementById("screenSub");
+    const btnBack = document.getElementById("btnBack");
+    const btnNext = document.getElementById("btnNext");
+
+    if (n===1){
+      title.textContent = "Step 1 — Bring Forward Your Previous Result";
+      sub.textContent   = "Keep your previous score visible. This is a reference point, not a judgment.";
+      btnBack.disabled = true;
+      btnNext.textContent = "Next";
+    }
+    if (n===2){
+      title.textContent = "Step 2 — Context Stability Check (Recent Practice)";
+      sub.textContent   = "Answer the 6 items. Focus on what you practiced under pressure.";
+      btnBack.disabled = false;
+      btnNext.textContent = "Calculate";
+    }
+    if (n===3){
+      title.textContent = "Step 3 — Results & Next Step";
+      sub.textContent   = "Compare baseline vs current practice. Choose the next path.";
+      btnBack.disabled = false;
+      btnNext.textContent = "Recalculate";
+      syncAnchorToTextarea();
+    }
+  }
+
+  /* -----------------------------
+    Questions
+  ------------------------------ */
+  function renderQuestions(){
+    const wrap = document.getElementById("questions");
+    wrap.innerHTML = "";
+    ITEMS.forEach((it, idx)=>{
+      const q = document.createElement("div");
+      q.className = "q";
+      q.innerHTML = `
+        <p class="qTitle">${idx+1}. ${it.text}</p>
+        <div class="scale">
+          ${SCALE.map((label,i)=>`
+            <label>
+              <input type="radio" name="${it.id}" value="${VALUES[i]}">
+              <div class="opt">${label}</div>
+            </label>
+          `).join("")}
+        </div>
+      `;
+      wrap.appendChild(q);
+    });
+  }
+
+  function getAnswers(){
+    const out = {};
+    for (const it of ITEMS){
+      const el = document.querySelector(`input[name="${it.id}"]:checked`);
+      if (!el) return { ok:false, missing: it.id };
+      out[it.id] = Number(el.value);
+    }
+    return { ok:true, answers: out };
+  }
+
+  function computeStability(){
+    const got = getAnswers();
+    if (!got.ok) return { ok:false, missing: got.missing };
+    const raw = Object.values(got.answers).reduce((a,b)=>a+b,0);
+    const max = 30;
+    const p = pct(raw, max);
+    return { ok:true, raw, max, pct:p, band: band(p) };
+  }
+
+  function getPrev(){
+    const prev = Number(document.getElementById("prevPct").value);
+    const ok = Number.isFinite(prev) && prev>=0 && prev<=100;
+    return { ok, prev };
+  }
+
+  function validateStep1(){
+    const err1 = document.getElementById("err1");
+    err1.textContent = "";
+
+    if (!selectedAnchorKey){
+      err1.textContent = "Please select your chosen Anchor Behavior before continuing.";
+      return false;
+    }
+    if (selectedAnchorKey === "other"){
+      const other = (document.getElementById("otherAnchor").value || "").trim();
+      if (!other){
+        err1.textContent = "Please write your anchor sentence under “Other” (one sentence).";
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /* -----------------------------
+    Interpretation
+  ------------------------------ */
+  function interpret(prev, cur){
+    const d = cur - prev;
+    if (d >= 5){
+      return {
+        tagCss: "strong",
+        title: "You are strengthening Context (predictability).",
+        body: "Your recent practice is more consistent than your baseline. This indicates improvement under pressure.",
+        next: "Proceed to Module 2 — Mutual Relationship (goodwill). Keep your Pressure Anchor active as you move forward.",
+        diff: d
+      };
+    }
+    if (d > -5 && d < 5){
+      return {
+        tagCss: "fragile",
+        title: "You are maintaining stability.",
+        body: "Predictability is present, but not yet automatic under pressure. Repetition matters here.",
+        next: "Repeat Context practice and reinforce your Pressure Anchor before moving forward.",
+        diff: d
+      };
+    }
+    return {
+      tagCss: "risk",
+      title: "Your recent stability is lower than your baseline.",
+      body: "This is not regression. It is information: pressure may still be overriding your intended behavior.",
+      next: "Revisit: Where Predictability May Be Assumed • Making Predictability Observable • Predictability When It Is Tested. Refine your Pressure Anchor. Practice again before progressing.",
+      diff: d
+    };
+  }
+
+  /* -----------------------------
+    PNG Preview (same as before, but now guaranteed anchorSentence exists)
+  ------------------------------ */
+  function bandColors(css){
+    if (css==="strong")  return {stroke:"rgba(126,231,135,.75)", fill:"rgba(126,231,135,.14)", text:"rgba(126,231,135,.98)"};
+    if (css==="fragile") return {stroke:"rgba(255,204,102,.85)", fill:"rgba(255,204,102,.12)", text:"rgba(255,204,102,.98)"};
+    if (css==="risk")    return {stroke:"rgba(255,159,102,.85)", fill:"rgba(255,159,102,.12)", text:"rgba(255,159,102,.98)"};
+    return {stroke:"rgba(255,107,107,.88)", fill:"rgba(255,107,107,.12)", text:"rgba(255,107,107,.98)"};
+  }
+  function wrapLines(ctx, text, maxWidth){
+    const words = String(text||"").split(/\s+/).filter(Boolean);
+    const lines = [];
+    let line = "";
+    for (const w of words){
+      const test = line ? line + " " + w : w;
+      if (ctx.measureText(test).width > maxWidth && line){
+        lines.push(line); line = w;
+      } else line = test;
+    }
+    if (line) lines.push(line);
+    return lines;
+  }
+  function roundRect(ctx,x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+  function drawPill(ctx, x, y, text, css){
+    const col = bandColors(css);
+    ctx.font = "800 18px Arial";
+    const tw = ctx.measureText(text).width;
+    const pw = Math.min(tw + 34, 560);
+    ctx.fillStyle = col.fill;
+    roundRect(ctx, x, y, pw, 40, 999);
+    ctx.fill();
+    ctx.strokeStyle = col.stroke;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = col.text;
+    ctx.fillText(text, x+18, y+26);
+  }
+
+  function generatePreviewPNG(state){
+    const canvas = document.getElementById("resultsCanvas");
+    const ctx = canvas.getContext("2d");
+    const W = canvas.width, H = canvas.height;
+
+    const g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0, "#0f1733");
+    g.addColorStop(1, "#070c1d");
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,H);
+
+    ctx.fillStyle = "rgba(63,194,194,.07)";
+    ctx.beginPath(); ctx.ellipse(260, 300, 470, 330, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = "rgba(99,248,239,.06)";
+    ctx.beginPath(); ctx.ellipse(1020, 360, 560, 400, 0, 0, Math.PI*2); ctx.fill();
+
+    const pad = 70;
+    const panelX = pad, panelY = pad, panelW = W-pad*2, panelH = H-pad*2;
+    ctx.fillStyle = "rgba(17,26,51,.80)";
+    roundRect(ctx, panelX, panelY, panelW, panelH, 28);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,.12)";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    ctx.fillStyle = "#eef2ff";
+    ctx.font = "900 42px Arial";
+    ctx.fillText("Context Stability Check — Results", panelX+50, panelY+90);
+
+    ctx.fillStyle = "#a9b3d1";
+    ctx.font = "600 20px Arial";
+    ctx.fillText("Recent practice • Behavior under pressure • Calibration", panelX+50, panelY+128);
+
+    const anchorSentence = (state.anchorSentence || "").trim() || "(not selected)";
+    ctx.fillStyle = "rgba(0,0,0,.16)";
+    roundRect(ctx, panelX+50, panelY+150, panelW-100, 92, 18);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,.10)";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.fillStyle = "#eef2ff";
+    ctx.font = "900 22px Arial";
+    ctx.fillText("Chosen Anchor Behavior", panelX+70, panelY+186);
+
+    ctx.fillStyle = "#a9b3d1";
+    ctx.font = "650 20px Arial";
+    const aLines = wrapLines(ctx, anchorSentence, panelW-140);
+    aLines.slice(0,2).forEach((ln, idx)=>{
+      ctx.fillText(ln, panelX+70, panelY+216 + idx*26);
+    });
+
+    const kpiY = panelY + 260;
+    const boxH = 150;
+    const gap = 18;
+    const innerW = panelW - 100;
+    const boxW = (innerW - gap*2) / 3;
+    const x0 = panelX + 50;
+
+    const prevTxt = state.prevOK ? (state.prev + "%") : "—";
+    const diffTxt = (state.prevOK && state.interp) ? ((state.interp.diff>=0?"+":"") + state.interp.diff + "%") : "—";
+
+    const cards = [
+      { title:"Previous Context %", value: prevTxt, meta:"From Trust Diagnostic", css:"fragile" },
+      { title:"Stability %", value: state.stability.pct + "%", meta:`${state.stability.raw} / ${state.stability.max}`, css: state.stability.band.css },
+      { title:"Difference", value: diffTxt, meta: state.prevOK ? "Current minus previous" : "Requires exact previous %", css: state.prevOK && state.interp ? state.interp.tagCss : "risk" }
+    ];
+
+    cards.forEach((c, i)=>{
+      const bx = x0 + i*(boxW + gap);
+      const by = kpiY;
+      const col = bandColors(c.css);
+
+      ctx.fillStyle = "rgba(0,0,0,.16)";
+      roundRect(ctx, bx, by, boxW, boxH, 18);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255,255,255,.10)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.fillStyle = "#eef2ff";
+      ctx.font = "800 22px Arial";
+      ctx.fillText(c.title, bx+16, by+42);
+
+      ctx.fillStyle = col.text;
+      ctx.font = "900 44px Arial";
+      ctx.fillText(c.value, bx+16, by+98);
+
+      ctx.fillStyle = "#a9b3d1";
+      ctx.font = "600 18px Arial";
+      ctx.fillText(c.meta, bx+16, by+130);
+    });
+
+    let y = kpiY + boxH + 22;
+    function drawBlock(title, body, pillText, pillCss){
+      const padX = 18;
+      const lineH = 30;
+      ctx.font = "600 20px Arial";
+      const lines = wrapLines(ctx, body, innerW - 36);
+      const showLines = lines.slice(0, 8);
+      const blockH = 22 + 44 + (showLines.length * lineH) + (pillText ? 60 : 0) + 22;
+
+      ctx.fillStyle = "rgba(0,0,0,.14)";
+      roundRect(ctx, x0, y, innerW, blockH, 18);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255,255,255,.10)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.fillStyle = "#eef2ff";
+      ctx.font = "900 26px Arial";
+      ctx.fillText(title, x0+padX, y+48);
+
+      ctx.fillStyle = "#a9b3d1";
+      ctx.font = "600 20px Arial";
+      showLines.forEach((ln, idx)=>{
+        ctx.fillText(ln, x0+padX, y+84 + idx*lineH);
+      });
+
+      if (pillText){
+        drawPill(ctx, x0+padX, y + 84 + showLines.length*lineH + 12, pillText, pillCss);
+      }
+      y += blockH + 16;
+    }
+
+    if (!state.prevOK){
+      drawBlock(
+        "Interpretation",
+        "Enter your exact previous Context % to activate comparison logic. Even without comparison, your Stability % shows how consistent your practice has been under pressure.",
+        null,
+        "risk"
+      );
+    } else {
+      const interpBody = state.interp.title + " " + state.interp.body + " Next step: " + state.interp.next;
+      drawBlock(
+        "Interpretation",
+        interpBody,
+        `${state.stability.pct}% • ${state.stability.band.tag}`,
+        state.stability.band.css
+      );
+    }
+
+    const anchorText = (state.anchorText || "").trim();
+    const anchorCheck = (state.anchorCheck || "").trim();
+    const anchorBlockBody =
+      (anchorText ? `When pressure rises: ${anchorText}` : "When pressure rises: (not written)") +
+      " " +
+      (anchorCheck ? `Check: ${anchorCheck}` : "Check: (not written)");
+
+    drawBlock("Anchor Reinforcement", anchorBlockBody, null, "fragile");
+
+    ctx.fillStyle = "#a9b3d1";
+    ctx.font = "600 18px Arial";
+    ctx.fillText("Calibration only. This output is for learning, not evaluation.", x0+18, panelY + panelH - 38);
+
+    const url = canvas.toDataURL("image/png");
+    document.getElementById("previewImg").src = url;
+    document.getElementById("previewWrap").style.display = "block";
+    document.getElementById("btnPng").disabled = false;
+  }
+
+  function downloadPNG(){
+    const canvas = document.getElementById("resultsCanvas");
+    const url = canvas.toDataURL("image/png");
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "context-stability-check-results.png";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+
+  /* -----------------------------
+    Results rendering
+  ------------------------------ */
+  function renderResults(stability){
+    const kpis = document.getElementById("kpis");
+    kpis.innerHTML = "";
+
+    const { ok:prevOK, prev } = getPrev();
+    const diff = prevOK ? (stability.pct - prev) : null;
+
+    kpis.innerHTML = `
+      <div class="kpiCard">
+        <div class="kpiTitle">Previous Context % (Trust Diagnostic)</div>
+        <div class="kpiVal">${prevOK ? (prev + "%") : "—"}</div>
+        <div class="small">${prevOK ? "Exact baseline from your Trust Diagnostic." : "Enter your exact % to enable comparison."}</div>
+      </div>
+      <div class="kpiCard">
+        <div class="kpiTitle">Current Stability % (Recent Practice)</div>
+        <div class="kpiVal">${stability.pct}%</div>
+        <div class="small">${stability.raw} / ${stability.max} points</div>
+        <div class="tag ${stability.band.css}">${stability.band.tag}</div>
+      </div>
+      <div class="kpiCard">
+        <div class="kpiTitle">Difference</div>
+        <div class="kpiVal">${prevOK ? ((diff>=0?"+":"") + diff + "%") : "—"}</div>
+        <div class="small">${prevOK ? "Current minus previous." : "Requires exact previous %."}</div>
+      </div>
+    `;
+
+    const interpretationBox = document.getElementById("interpretationBox");
+    const exitPath = document.getElementById("exitPath");
+
+    let interp = null;
+
+    if (!prevOK){
+      interpretationBox.innerHTML = `
+        <h3>Interpretation</h3>
+        <p>Enter your exact previous Context % to activate comparison logic.</p>
+        <p class="small">Even without comparison, your Stability % shows how consistent your practice has been under pressure.</p>
+      `;
+      exitPath.innerHTML = `
+        <h3>Exit Path</h3>
+        <p class="small">Add your previous % above and recalculate for a clear next step.</p>
+      `;
+    } else {
+      interp = interpret(prev, stability.pct);
+
+      if (interp.tagCss === "strong"){
+        interpretationBox.innerHTML = `
+          <h3>Interpretation</h3>
+          <p><b>${interp.title}</b></p>
+          <p>${interp.body}</p>
+          <div class="tag strong">Strengthening • +${interp.diff}%</div>
+        `;
+        exitPath.innerHTML = `
+          <h3>Exit Path</h3>
+          <p><b>Proceed to Module 2 — Mutual Relationship (goodwill).</b></p>
+          <p class="small">Keep your Pressure Anchor active as you move forward.</p>
+        `;
+      } else if (interp.tagCss === "fragile"){
+        interpretationBox.innerHTML = `
+          <h3>Interpretation</h3>
+          <p><b>${interp.title}</b></p>
+          <p>${interp.body}</p>
+          <div class="tag fragile">Maintaining • ${interp.diff>=0?"+":""}${interp.diff}%</div>
+        `;
+        exitPath.innerHTML = `
+          <h3>Exit Path</h3>
+          <p><b>Repeat Context practice.</b></p>
+          <p class="small">Reinforce your Pressure Anchor before moving forward.</p>
+        `;
+      } else {
+        interpretationBox.innerHTML = `
+          <h3>Interpretation</h3>
+          <p><b>${interp.title}</b></p>
+          <p>${interp.body}</p>
+          <div class="tag risk">Calibration Signal • ${interp.diff}%</div>
+          <div class="divider"></div>
+          <p class="small"><b>Next action:</b> revisit the Context lessons:</p>
+          <ul class="small" style="margin:8px 0 0 18px; color: var(--muted);">
+            <li>Where Predictability May Be Assumed</li>
+            <li>Making Predictability Observable</li>
+            <li>Predictability When It Is Tested</li>
+          </ul>
+        `;
+        exitPath.innerHTML = `
+          <h3>Exit Path</h3>
+          <p><b>Review Lessons 1–4 and redesign your Anchor.</b></p>
+          <p class="small">Then repeat this check after practice.</p>
+        `;
+      }
+    }
+
+    // Ensure anchor is present in Step 3 + PNG
+    syncAnchorToTextarea();
+
+    const state = {
+      prevOK, prev,
+      stability,
+      interp,
+      anchorSentence: getChosenAnchorSentence(),
+      anchorText: document.getElementById("anchorText").value,
+      anchorCheck: document.getElementById("anchorCheck").value
+    };
+    generatePreviewPNG(state);
+  }
+
+  /* -----------------------------
+    Init + Buttons
+  ------------------------------ */
+  document.addEventListener("DOMContentLoaded", ()=>{
+    renderAnchors();
+    renderQuestions();
+    setScreen(1);
+
+    const btnBack  = document.getElementById("btnBack");
+    const btnReset = document.getElementById("btnReset");
+    const btnNext  = document.getElementById("btnNext");
+    const btnPng   = document.getElementById("btnPng");
+
+    btnBack.addEventListener("click", ()=>{
+      if (screen>1) setScreen(screen-1);
+    });
+
+    btnNext.addEventListener("click", ()=>{
+      if (screen===1){
+        if (!validateStep1()) return;
+        setScreen(2);
+        return;
+      }
+
+      if (screen===2){
+        const got = getAnswers();
+        if (!got.ok){
+          document.getElementById("err2").textContent = "Please answer all 6 items before calculating.";
+          const missingEl = document.querySelector(`input[name="${got.missing}"]`);
+          missingEl?.closest(".q")?.scrollIntoView({behavior:"smooth", block:"center"});
+          return;
+        }
+        document.getElementById("err2").textContent = "";
+        const stability = computeStability();
+        setScreen(3);
+        renderResults(stability);
+        return;
+      }
+
+      if (screen===3){
+        const got = getAnswers();
+        if (!got.ok){
+          setScreen(2);
+          document.getElementById("err2").textContent = "Please answer all 6 items before calculating.";
+          return;
+        }
+        const stability = computeStability();
+        renderResults(stability);
+      }
+    });
+
+    btnReset.addEventListener("click", ()=>{
+      document.querySelectorAll('input[type="radio"]').forEach(r=> r.checked = false);
+      document.getElementById("prevPct").value = "";
+      document.getElementById("otherAnchor").value = "";
+      document.getElementById("anchorText").value = "";
+      document.getElementById("anchorCheck").value = "";
+      document.getElementById("err1").textContent = "";
+      document.getElementById("err2").textContent = "";
+      document.getElementById("previewWrap").style.display = "none";
+      document.getElementById("previewImg").src = "";
+      document.getElementById("btnPng").disabled = true;
+
+      selectedAnchorKey = null;
+      document.querySelectorAll(".aOpt").forEach(el=> el.classList.remove("active"));
+      document.getElementById("otherWrap").classList.remove("show");
+
+      document.getElementById("selectedAnchorBox").style.display = "none";
+      document.getElementById("selectedAnchorText").textContent = "";
+
+      setScreen(1);
+      document.getElementById("mainCard").scrollIntoView({behavior:"smooth", block:"start"});
+    });
+
+    btnPng.addEventListener("click", ()=> downloadPNG());
+  });
+</script>
+</body>
+</html>
